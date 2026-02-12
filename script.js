@@ -24,45 +24,35 @@ navLinks.forEach(link => {
 // ACTIVE NAV LINK
 // =====================
 
-function updateActiveNavLink() {
+window.addEventListener('scroll', () => {
     const sections = document.querySelectorAll('section');
-    const links = document.querySelectorAll('.nav-link');
+    let current = '';
 
-    window.addEventListener('scroll', () => {
-        let current = '';
-
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 120;
-            if (window.scrollY >= sectionTop) {
-                current = section.getAttribute('id');
-            }
-        });
-
-        links.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${current}`) {
-                link.classList.add('active');
-            }
-        });
+    sections.forEach(section => {
+        if (scrollY >= section.offsetTop - 120) {
+            current = section.getAttribute('id');
+        }
     });
-}
 
-updateActiveNavLink();
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
 
 // =====================
 // SMOOTH SCROLL
 // =====================
 
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        const target = document.querySelector(this.getAttribute('href'));
+    anchor.addEventListener('click', e => {
+        const target = document.querySelector(anchor.getAttribute('href'));
         if (!target) return;
 
         e.preventDefault();
-        target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
+        target.scrollIntoView({ behavior: 'smooth' });
     });
 });
 
@@ -70,17 +60,14 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // SCROLL ANIMATION
 // =====================
 
-const observer = new IntersectionObserver(
-    entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    },
-    { threshold: 0.1 }
-);
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, { threshold: 0.1 });
 
 document.querySelectorAll('.project-card, .certificate-card').forEach(el => {
     el.style.opacity = '0';
@@ -90,31 +77,52 @@ document.querySelectorAll('.project-card, .certificate-card').forEach(el => {
 });
 
 // =====================
-// CERTIFICATE LIGHTBOX (FIXED)
+// CERTIFICATE LIGHTBOX (100% WORKING)
 // =====================
 
 const certLightbox = document.getElementById('certLightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.getElementById('lightboxClose');
-const certCards = document.querySelectorAll('.certificate-card');
 
-certCards.forEach(card => {
+/**
+ * FUNCTION BUKA SERTIFIKAT
+ */
+function openCertificate(card) {
+    const img = card.querySelector('.cert-image');
+    if (!img) return;
+
+    lightboxImage.src = img.src;
+    certLightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+/**
+ * KLIK CARD
+ */
+document.querySelectorAll('.certificate-card').forEach(card => {
     card.addEventListener('click', () => {
-        const img = card.querySelector('.cert-image');
-        if (!img) return;
-
-        lightboxImage.src = img.src;
-        certLightbox.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        openCertificate(card);
     });
 });
 
-if (lightboxClose) {
-    lightboxClose.addEventListener('click', () => {
-        certLightbox.classList.remove('active');
-        document.body.style.overflow = 'auto';
+/**
+ * KLIK TOMBOL "VIEW CERTIFICATE"
+ */
+document.querySelectorAll('.cert-preview-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.stopPropagation(); // cegah dobel trigger
+        const card = btn.closest('.certificate-card');
+        if (card) openCertificate(card);
     });
-}
+});
+
+/**
+ * CLOSE LIGHTBOX
+ */
+lightboxClose.addEventListener('click', () => {
+    certLightbox.classList.remove('active');
+    document.body.style.overflow = 'auto';
+});
 
 certLightbox.addEventListener('click', e => {
     if (e.target === certLightbox) {
@@ -131,7 +139,7 @@ document.addEventListener('keydown', e => {
 });
 
 // =====================
-// CONTACT FORM → EMAIL REDIRECT
+// CONTACT FORM → EMAIL
 // =====================
 
 const contactForm = document.getElementById('contactForm');
@@ -151,31 +159,19 @@ if (contactForm) {
             return;
         }
 
-        if (!isValidEmail(email)) {
-            showFormMessage('Invalid email format.', 'error');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showFormMessage('Invalid email.', 'error');
             return;
         }
 
-        const mailto = `mailto:hassnaahaniifah@gmail.com
-?subject=${encodeURIComponent(subject)}
-&body=${encodeURIComponent(
-`Nama: ${name}
-Email: ${email}
-
-Pesan:
-${message}`
-)}`;
-
-        window.location.href = mailto;
+        window.location.href =
+            `mailto:hassnaahaniifah@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+                `Nama: ${name}\nEmail: ${email}\n\n${message}`
+            )}`;
     });
 }
 
-function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 function showFormMessage(msg, type) {
-    if (!formMessage) return;
     formMessage.textContent = msg;
     formMessage.className = `form-message ${type}`;
     formMessage.style.display = 'block';
